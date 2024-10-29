@@ -1,0 +1,51 @@
+Sub RefreshAndAppendData()
+    Dim wsfx_rates As Worksheet
+    Dim wseurTrial As Worksheet
+    Dim tblfx_rates_2 As ListObject
+    Dim tbleurTrial_1 As ListObject
+    Dim lastRowHist As Long
+    Dim lastRowNew As Long
+    Dim rngNewData As Range
+    
+    ' Set the worksheets
+    Set wsfx_rates = ThisWorkbook.Sheets("fx_rates") ' Ensure this matches your sheet name
+    Set wseurTable = ThisWorkbook.Sheets("eurTrial") ' Ensure this matches your sheet name
+    
+    ' Set the tables
+    Set tblfx_rates_2 = wsfx_rates.ListObjects("fx_rates_2") ' Ensure this matches your table name
+    Set tbleurTrial_1 = wseurTable.ListObjects("eurTrial_1") ' Ensure this matches your table name
+    
+     ' Refresh the table
+    tbleurTrial_1.QueryTable.Refresh BackgroundQuery:=False
+    
+    
+    ' Refresh the data connection on the NewData sheet
+    ' Ensure the query name matches the one created by Power Query
+    ThisWorkbook.Connections("Query - eurTrial").Refresh
+    
+    ' Wait for the refresh to complete (useful if large data set)
+    DoEvents
+    
+    ' Find the last row in the historical data table
+    lastRowHist = tblfx_rates_2.ListRows.Count
+    Debug.Print "Last row in historical data table: " & lastRowHist
+    
+    ' Find the last row in the new data table
+    lastRowNew = tbleurTrial_1.ListRows.Count
+    Debug.Print "Last row in new data table: " & lastRowNew
+    
+    ' Define the range of new data
+    Set rngNewData = tbleurTrial_1.DataBodyRange
+    Debug.Print "Range of new data: " & rngNewData.Address
+    
+    ' Copy the new data to the historical data table
+    rngNewData.Copy
+    tblfx_rates_2.DataBodyRange.Rows(lastRowHist + 1).PasteSpecial Paste:=xlPasteValues
+    
+    ' Clear clipboard
+    Application.CutCopyMode = False
+    
+    ' Inform the user
+    MsgBox "Data has been refreshed and appended.", vbInformation
+    
+End Sub
